@@ -41,9 +41,59 @@ public class ProxyManager {
     }
 
     public void SetupProxyChecker(){
+        taskExecutor.execute(() -> {
+            while(true){
+                if(checkingProxies.size() > 0) {
+                    for (String proxy :
+                            checkingProxies) {
+                        HttpHost proxyHost = new HttpHost(proxy.split(":")[0],
+                                Integer.parseInt(proxy.split(":")[1]));
+                        RequestConfig.Builder reqconfigconbuilder = RequestConfig.custom();
+                        reqconfigconbuilder.setConnectionRequestTimeout(500);
+                        reqconfigconbuilder.setConnectTimeout(500);
+                        reqconfigconbuilder = reqconfigconbuilder.setProxy(proxyHost);
+                        RequestConfig config = reqconfigconbuilder.build();
+
+                        HttpGet post = new HttpGet("http://ocr.asprise.com/api/v1/receipt");
+                        post.setConfig(config);
+                        try {
+                            CloseableHttpResponse resp = client.execute(post);
+                            System.out.println("PROXY OK");
+                            proxies.add(proxy);
+                            resp.close();
+                        } catch (IOException e) {
+                            System.out.println ("PROXY DEAD: " + e.getMessage());
+                            proxies.remove(proxy);
+                        }
+                    }
+                }
+            }
+        });
     }
 
     public void LoadProxies(){
+        HttpGet getProxies = new HttpGet("https://free-proxy-list.net/anonymous-proxy.html");
+        HttpResponse proxiesResponse = null;
+        try {
+            proxiesResponse = client.execute(getProxies);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        HttpEntity proxiesRaw = proxiesResponse.getEntity();
+        String proxiesRawStr = null;
+        try {
+            proxiesRawStr = EntityUtils.toString(proxiesRaw);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        proxiesRawStr = proxiesRawStr.split("UTC.")[1].split("</textarea>")[0];
+        String regex = ".+:.+";
+        Pattern p = Pattern.compile(regex);
+        Matcher matcher = p.matcher(proxiesRawStr);
+
+        while (matcher.find()) {
+            this.checkingProxies.add(matcher.group());
+        }
     }
 
     public HttpHost GetProxy(){
