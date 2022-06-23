@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 import com.projekt.PaliwoApp.config.UserPrincipal;
 import com.projekt.PaliwoApp.model.Receipt;
 import com.projekt.PaliwoApp.model.User;
-import com.projekt.PaliwoApp.repository.ReceiptRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,8 +13,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.util.List;
 
 public class WykresyController {
+    
     @Autowired
-    private ReceiptRepository receiptRepository;
+    private com.example.demo.repository.ReceiptRepository receiptRepository;
 
     public JsonObject RachunekToJson(Receipt rachunek){
         JsonObject rachunekJson = new JsonObject();
